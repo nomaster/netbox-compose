@@ -1,0 +1,52 @@
+version: '3.7'
+
+volumes:
+  media:
+  static:
+  pgdata:
+
+networks:
+  web:
+  netbox:
+  db:
+
+services:
+  traefik:
+    image: traefik
+    ports:
+      - '80:80'
+      - '8080:8080'
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+    command: traefik --docker --docker.network=netbox_web --api --debug
+    networks:
+      - web
+  frontend:
+    image: nomaster/netbox-frontend
+    build: nginx
+    volumes:
+      - 'media:/media'
+      - 'static:/static'
+    networks:
+      - web
+      - netbox
+    labels:
+      - "traefik.frontend.rule=Host:netbox.docker.localhost"
+  backend:
+    image: nomaster/netbox
+    build: netbox
+    volumes:
+      - 'media:/opt/netbox/media'
+      - 'static:/opt/netbox/static'
+    networks:
+      - db
+      - netbox
+  postgres:
+    image: postgres
+    volumes:
+      - 'pgdata:/var/lib/postgresql/data'
+    environment:
+      POSTGRES_PASSWORD: netbox
+      POSTGRES_USER: netbox
+    networks:
+      - db
