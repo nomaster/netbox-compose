@@ -18,7 +18,7 @@ services:
       - '8080:8080'
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
-    command: traefik --docker --docker.network=netbox_web --api --debug
+    command: traefik --docker --docker.network=netbox-deploy_web --api --debug
     networks:
       - web
   frontend:
