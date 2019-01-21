@@ -6,34 +6,24 @@ volumes:
   pgdata:
 
 networks:
-  web:
   netbox:
   db:
+  auth:
+  web:
+    external: true
 
 services:
-  traefik:
-    image: traefik
-    ports:
-      - '80:80'
-      - '8080:8080'
-    volumes:
-      - '/var/run/docker.sock:/var/run/docker.sock:ro'
-    command: traefik --docker --docker.network=netbox-deploy_web --api --debug
-    networks:
-      - web
   frontend:
-    image: nomaster/netbox-frontend
+    image: localhost:5000/netbox/frontend
     build: nginx
     volumes:
       - 'media:/media'
       - 'static:/static'
     networks:
-      - web
+      - auth
       - netbox
-    labels:
-      - "traefik.frontend.rule=Host:netbox.docker.localhost"
   backend:
-    image: nomaster/netbox
+    image: localhost:5000/netbox/backend
     build: netbox
     volumes:
       - 'media:/opt/netbox/media'
@@ -41,6 +31,10 @@ services:
     networks:
       - db
       - netbox
+    environment:
+      - NETBOX_SECRET=${NETBOX_SECRET}
+      - NETBOX_TIME_ZONE=Europe/Berlin
+      - NETBOX_LOG_LEVEL=DEBUG
   postgres:
     image: postgres
     volumes:
@@ -50,3 +44,15 @@ services:
       POSTGRES_USER: netbox
     networks:
       - db
+  oauth2_proxy:
+    build: oauth2_proxy
+    networks:
+      - auth
+      - web
+    environment:
+      - OAUTH2_PROXY_CLIENT_ID=${OAUTH2_PROXY_CLIENT_ID}
+      - OAUTH2_PROXY_CLIENT_SECRET=${OAUTH2_PROXY_CLIENT_SECRET}
+      - OAUTH2_PROXY_COOKIE_SECRET=${OAUTH2_PROXY_COOKIE_SECRET}
+    labels:
+      - 'traefik.frontend.rule=Host:netbox.nomaster.cc'
+      - 'traefik.enable=true'
