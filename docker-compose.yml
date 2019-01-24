@@ -17,8 +17,8 @@ services:
     image: localhost:5000/netbox/frontend
     build: nginx
     volumes:
-      - 'media:/media'
-      - 'static:/static'
+      - 'media:/usr/share/nginx/html/media:ro'
+      - 'static:/usr/share/nginx/html/static:ro'
     networks:
       - auth
       - netbox
