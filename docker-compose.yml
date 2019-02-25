@@ -32,9 +32,10 @@ services:
       - db
       - netbox
     environment:
-      - NETBOX_SECRET=${NETBOX_SECRET}
-      - NETBOX_TIME_ZONE=Europe/Berlin
-      - NETBOX_LOG_LEVEL=DEBUG
+      - NETBOX_SECRET
+      - NETBOX_TIME_ZONE
+    depends_on:
+      - postgres
   postgres:
     image: postgres
     volumes:
@@ -45,14 +46,18 @@ services:
     networks:
       - db
   oauth2_proxy:
+    image: localhost:5000/netbox/oauth2_proxy
     build: oauth2_proxy
     networks:
       - auth
       - web
     environment:
-      - OAUTH2_PROXY_CLIENT_ID=${OAUTH2_PROXY_CLIENT_ID}
-      - OAUTH2_PROXY_CLIENT_SECRET=${OAUTH2_PROXY_CLIENT_SECRET}
-      - OAUTH2_PROXY_COOKIE_SECRET=${OAUTH2_PROXY_COOKIE_SECRET}
-    labels:
-      - 'traefik.frontend.rule=Host:netbox.nomaster.cc'
-      - 'traefik.enable=true'
+      - OAUTH2_PROXY_CLIENT_ID
+      - OAUTH2_PROXY_CLIENT_SECRET
+      - OAUTH2_PROXY_COOKIE_SECRET
+    deploy:
+      labels:
+        - 'traefik.docker.network=web'
+        - 'traefik.frontend.rule=Host:netbox.nomaster.cc'
+        - 'traefik.enable=true'
+        - 'traefik.port=80'
