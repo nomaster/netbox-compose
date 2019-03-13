@@ -23,8 +23,7 @@ services:
       - auth
       - netbox
   backend:
-    image: localhost:5000/netbox/backend
-    build: netbox
+    image: nomaster/netbox
     volumes:
       - 'media:/opt/netbox/media'
       - 'static:/opt/netbox/static'
